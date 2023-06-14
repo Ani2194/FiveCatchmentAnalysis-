@@ -1,0 +1,375 @@
+import pandas as pd 
+import numpy as np 
+import csv 
+import matplotlib.pyplot as plt 
+# Reading runoff data 
+q1 = pd.read_csv(r'D:\hydrology\1387-GRANSEL(4).csv', skiprows = 12 )
+q2 = pd.read_csv(r'D:\hydrology\1403-KARATS(6).csv' , skiprows = 12)
+q3 = pd.read_csv(r'D:\hydrology\1690-LÅNGSJÖN(3).csv' , skiprows = 12)
+q4 = pd.read_csv(r'D:\hydrology\1788-SIKFORS KRV(5).xls.csv' , skiprows = 12)
+q5 = pd.read_csv(r'D:\hydrology\2596-HOLMFORS(2).xls.csv', skiprows = 12)
+q6 = pd.read_csv(r'D:\hydrology\20061-STORAVAN(1).csv', skiprows =12)
+# Reading precipitation data 
+p1 = pd.read_csv(r'D:\hydrology\smhi-opendata_5_(For Gransel).csv' , sep=';', skiprows = 15)
+p2 = pd.read_csv(r'D:\hydrology\smhi-opendata_5_(For karats).csv' , sep=';', skiprows = 12)
+p3 = pd.read_csv(r'D:\hydrology\smhi-opendata_5_(For Langsjon).csv', sep=';', skiprows=9)
+p4 = pd.read_csv(r'D:\hydrology\smhi-opendata_5_(For sikfors).csv', sep=';', skiprows=10)
+p5 = pd.read_csv(r'D:\hydrology\smhi-opendata_5_(for holmfors).csv', sep=';', skiprows= 9)
+p6 = pd.read_csv(r'D:\hydrology\smhi-opendata_5_(for storavan).csv', sep=';', skiprows = 12)
+
+q =[q1,q2,q3,q4,q5,q6]
+p =[p1,p2,p3,p4,p5,p6]
+
+#screening and converting data according to requirement
+for i in p:
+    i[["Year", "Month" , "Day"]] = i["Representativt dygn"].str.split('-', expand = True)
+    i["Month"] = i["Month"].replace('01' , '1')
+    i["Month"] = i["Month"].replace('02', '2')
+    i["Month"] = i["Month"].replace('03', '3')
+    i["Month"] = i["Month"].replace('04', '4')
+    i["Month"] = i["Month"].replace('05', '5')
+    i["Month"] = i["Month"].replace('06', '6')
+    i["Month"] = i["Month"].replace('07', '7')
+    i["Month"] = i["Month"].replace('08', '8')
+    i["Month"] = i["Month"].replace('09', '9')
+    i["Day"] = i["Day"].replace('01' , '1')
+    i["Day"] = i["Day"].replace('02', '2')
+    i["Day"] = i["Day"].replace('03', '3')
+    i["Day"] = i["Day"].replace('04', '4')
+    i["Day"] = i["Day"].replace('05', '5')
+    i["Day"] = i["Day"].replace('06', '6')
+    i["Day"] = i["Day"].replace('07', '7')
+    i["Day"] = i["Day"].replace('08', '8')
+    i["Day"] = i["Day"].replace('09', '9')
+    for x in range(len(i["Nederbördsmängd"])):
+        i["Nederbördsmängd"][x] = float(i["Nederbördsmängd"][x])
+    
+    
+
+for i in q:
+    i[["Day", "Month", "Year"]] = i["Date"].str.split('-', expand = True)
+    i["Rain"] = i["Rain"].replace('Saknas', None)
+    i["Month"] = i["Month"].replace('01' , '1')
+    i["Month"] = i["Month"].replace('02', '2')
+    i["Month"] = i["Month"].replace('03', '3')
+    i["Month"] = i["Month"].replace('04', '4')
+    i["Month"] = i["Month"].replace('05', '5')
+    i["Month"] = i["Month"].replace('06', '6')
+    i["Month"] = i["Month"].replace('07', '7')
+    i["Month"] = i["Month"].replace('08', '8')
+    i["Month"] = i["Month"].replace('09', '9')
+    for x in range(len(i["Rain"])):
+        i["Rain"][x] = float(i["Rain"][x])
+    
+# finding unique years in data set 
+res2 = []                 
+for i in q:
+    for x in range(len(i["Year"])):
+        if (i["Year"][x]) not in res2 :
+            res2.append(i["Year"][x])
+
+res2 = res2[46:79]
+Area = [6930.9, 1173.9,42.6, 1173.9, 6930.9, 6322.9]
+# creating data frame for yearly statistics 
+Qy2 = pd.DataFrame(res2)
+Qy2.columns = ["Year"]
+Qy2["Gransel(Discharge)"] = np.nan
+Qy2["Karats(Discharge"] = np.nan
+Qy2["Langsjon(Discharge)"] = np.nan
+Qy2["Sikfors(Discharge)"] = np.nan
+Qy2["Holmfors(Discharge)"] = np.nan
+Qy2["Storavan(Discharge)"] = np.nan
+
+Qy3 = pd.DataFrame(res2)
+Qy3.columns = ["Year"]
+Qy3["GRANSEL(precipitation)"] = np.nan
+Qy3["KARATS(precipitation)"] = np.nan
+Qy3["LÅNGSJÖN(precipitation)"] = np.nan
+Qy3["SIKFORS(precipitation)"] = np.nan   
+Qy3["HOLMFORS(precipitation)"] = np.nan
+Qy3["STORAVAN(precipitation)"] = np.nan
+
+
+
+            
+for i in range(len(q)):
+    for x in range(len(res2)):
+        t = q[i][str(Qy2.iloc[x,0]) == q[i].iloc[:,5]].index.values
+        Qy2.iloc[x,i+1] = np.sum(q[i].iloc[t,1])*((24*60*60)/(Area[i]*(10**3)))
+        
+        
+                                             
+
+
+
+for i in range(len(p)):
+    for x in range(len(res2)):
+            t = p[i][str(Qy3.iloc[x,0]) == p[i].iloc[:,7]].index.values
+            Qy3.iloc[x,i+1] = np.sum(p[i].iloc[t,3])     
+
+
+# data frames for monthly statistics 
+QyG = pd.DataFrame(res2)
+QyG.columns = ["year"]
+for x1 in range(1,13):
+    QyG[x1] = np.nan
+QyK = pd.DataFrame(res2)
+QyK.columns = ["year"]
+for x1 in range(1,13):
+    QyK[x1] = np.nan
+QyL = pd.DataFrame(res2)
+QyL.columns = ["year"]
+for x1 in range(1,13):
+    QyL[x1] = np.nan
+QyS = pd.DataFrame(res2)
+QyS.columns = ["year"]
+for x1 in range(1,13):
+    QyS[x1] = np.nan
+QyH = pd.DataFrame(res2)
+QyH.columns = ["year"]
+for x1 in range(1,13):
+    QyH[x1] = np.nan
+QyST = pd.DataFrame(res2)
+QyST.columns = ["year"]
+for x1 in range(1,13):
+    QyST[x1] = np.nan
+
+
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = q1[str(l) == q1.iloc[:,4]].index.values
+        t1 = q1[str(QyG.iloc[x,0]) == q1.iloc[:,5]].index.values
+        t3 = np.intersect1d(t,t1)
+        QyG.iloc[x,l] = np.sum(q1.iloc[t3,1]) *((24*60*60)/(Area[0] *(10**3)))
+        
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = q2[str(l) == q2.iloc[:,4]].index.values
+        t1 = q2[str(QyK.iloc[x,0]) == q2.iloc[:,5]].index.values
+        t3 = np.intersect1d(t,t1)
+        QyK.iloc[x,l] = np.sum(q2.iloc[t3,1]) *((24*60*60)/(Area[1] *(10**3)))
+
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = q3[str(l) == q3.iloc[:,4]].index.values
+        t1 = q3[str(QyG.iloc[x,0]) == q3.iloc[:,5]].index.values
+        t3 = np.intersect1d(t,t1)
+        QyL.iloc[x,l] = np.sum(q3.iloc[t3,1]) *((24*60*60)/(Area[2] *(10**3)))
+
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = q4[str(l) == q4.iloc[:,4]].index.values
+        t1 = q4[str(QyG.iloc[x,0]) == q4.iloc[:,5]].index.values
+        t3 = np.intersect1d(t,t1)
+        QyS.iloc[x,l] = np.sum(q4.iloc[t3,1]) *((24*60*60)/(Area[3] *(10**3)))
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = q5[str(l) == q5.iloc[:,4]].index.values
+        t1 = q5[str(QyG.iloc[x,0]) == q5.iloc[:,5]].index.values
+        t3 = np.intersect1d(t,t1)
+        QyH.iloc[x,l] = np.sum(q5.iloc[t3,1]) *((24*60*60)/(Area[4] *(10**3)))
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = q6[str(l) == q6.iloc[:,4]].index.values
+        t1 = q6[str(QyG.iloc[x,0]) == q6.iloc[:,5]].index.values
+        t3 = np.intersect1d(t,t1)
+        QyST.iloc[x,l] = np.sum(q6.iloc[t3,1]) *((24*60*60)/(Area[5] *(10**3)))
+
+# monthly precipitation        
+Qp1 = pd.DataFrame(res2)
+Qp1.columns = ["year"]
+for x1 in range(1,13):
+    Qp1[x1] = np.nan
+    
+Qp2 = pd.DataFrame(res2)
+Qp2.columns = ["year"]
+for x1 in range(1,13):
+    Qp2[x1] = np.nan
+
+Qp3 = pd.DataFrame(res2)
+Qp3.columns = ["year"]
+for x1 in range(1,13):
+    Qp3[x1] = np.nan
+    
+Qp4 = pd.DataFrame(res2)
+Qp4.columns = ["year"]
+for x1 in range(1,13):
+    Qp4[x1] = np.nan
+    
+Qp5 = pd.DataFrame(res2)
+Qp5.columns = ["year"]
+for x1 in range(1,13):
+    Qp5[x1] = np.nan
+    
+Qp6 = pd.DataFrame(res2)
+Qp6.columns = ["year"]
+for x1 in range(1,13):
+    Qp6[x1] = np.nan
+    
+dp = [Qp1,Qp2,Qp3,Qp4,Qp5,Qp6]
+    
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = p1[str(l) == p1.iloc[:,-2]].index.values
+        t1 = p1[str(Qp1.iloc[x,0]) == p1.iloc[:,-3]].index.values
+        t3 = np.intersect1d(t,t1)
+        Qp1.iloc[x,l] = np.sum(p1.iloc[t3,3])
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = p2[str(l) == p2.iloc[:,-2]].index.values
+        t1 = p2[str(Qp1.iloc[x,0]) == p2.iloc[:,-3]].index.values
+        t3 = np.intersect1d(t,t1)
+        Qp2.iloc[x,l] = np.sum(p1.iloc[t3,3])
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = p3[str(l) == p3.iloc[:,-2]].index.values
+        t1 = p3[str(Qp1.iloc[x,0]) == p3.iloc[:,-3]].index.values
+        t3 = np.intersect1d(t,t1)
+        Qp3.iloc[x,l] = np.sum(p3.iloc[t3,3])
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = p4[str(l) == p4.iloc[:,-2]].index.values
+        t1 = p4[str(Qp1.iloc[x,0]) == p4.iloc[:,-3]].index.values
+        t3 = np.intersect1d(t,t1)
+        Qp4.iloc[x,l] = np.sum(p1.iloc[t3,3])
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = p5[str(l) == p5.iloc[:,-2]].index.values
+        t1 = p5[str(Qp1.iloc[x,0]) == p5.iloc[:,-3]].index.values
+        t3 = np.intersect1d(t,t1)
+        Qp5.iloc[x,l] = np.sum(p5.iloc[t3,3])
+for l in range(1,13):
+    for x in range(len(res2)):
+        t = p6[str(l) == p6.iloc[:,-2]].index.values
+        t1 = p6[str(Qp1.iloc[x,0]) == p6.iloc[:,-3]].index.values
+        t3 = np.intersect1d(t,t1)
+        Qp6.iloc[x,l] = np.sum(p6.iloc[t3,3])
+        
+# data frames for runoff ratio 
+newdf = pd.DataFrame(res2)
+newdf.columns = ["Year"]
+for x1 in range(1,7):
+    newdf[x1] = np.nan
+
+for i in range(len(Qy2["Year"])):
+    for x in range(1,7):
+        newdf.iloc[i,x] = Qy2.iloc[i,x]/Qy3.iloc[i,x]
+        
+newdf1 = pd.DataFrame(res2)        
+newdf1.columns =["year"]
+for x1 in range(1,13):
+    newdf1[x1] = np.nan
+    
+newdf2 = pd.DataFrame(res2)        
+newdf2.columns =["year"]
+for x1 in range(1,13):
+    newdf2[x1] = np.nan    
+
+newdf3 = pd.DataFrame(res2)        
+newdf3.columns =["year"]
+for x1 in range(1,13):
+    newdf3[x1] = np.nan
+    
+newdf4 = pd.DataFrame(res2)        
+newdf4.columns =["year"]
+for x1 in range(1,13):
+    newdf4[x1] = np.nan
+newdf5 = pd.DataFrame(res2)        
+newdf5.columns =["year"]
+for x1 in range(1,13):
+    newdf5[x1] = np.nan
+newdf6 = pd.DataFrame(res2)        
+newdf6.columns =["year"]
+for x1 in range(1,13):
+    newdf6[x1] = np.nan
+    
+dnew = [newdf1,newdf2,newdf3,newdf4,newdf5,newdf6]
+
+for y in range(len(res2)):
+                    for x in range(1,13):
+                        newdf1.iloc[y,x] = (QyG.iloc[y,x]/Qp1.iloc[y,x])/ newdf.iloc[y,1]
+
+for y in range(len(res2)):
+                    for x in range(1,13):
+                        newdf2.iloc[y,x] = (QyK.iloc[y,x]/Qp2.iloc[y,x])/ newdf.iloc[y,2]
+
+for y in range(len(res2)):
+                    for x in range(1,13):
+                        newdf3.iloc[y,x] = (QyL.iloc[y,x]/Qp3.iloc[y,x]) / newdf.iloc[y,3]
+for y in range(len(res2)):
+                    for x in range(1,13):
+                        newdf4.iloc[y,x] = (QyS.iloc[y,x]/Qp4.iloc[y,x])/ newdf.iloc[y,4] 
+
+for y in range(len(res2)):
+                    for x in range(1,13):
+                        newdf5.iloc[y,x] = (QyH.iloc[y,x]/Qp5.iloc[y,x]) /newdf.iloc[y,5] 
+for y in range(len(res2)):
+                    for x in range(1,13):
+                            newdf6.iloc[y,x] = (QyST.iloc[y,x]/Qp6.iloc[y,x]) /(newdf.iloc[y,6])                
+
+# plots 
+    
+x2 = [1,2,3,4,5,6,7,8,9,10,11,12,13]                       
+plotframe = pd.DataFrame(x2)
+plotframe.columns = ["number"]
+for x1 in range(1,7):
+    plotframe[x1] = np.nan
+
+n=1 
+x3 =[]
+while n < 366 :
+    x3.append(n)
+    n+=1
+    
+plotframe1 = pd.DataFrame(x3)    
+plotframe1.columns = ["Days"]
+for x1 in range(1,7):
+    plotframe1[x1] = np.nan
+
+
+y1 = ["1984", "1994", "2004", "2014" , "2020"]
+    
+
+for x in range(1,13):
+    plotframe.iloc[x,1] = newdf1.iloc[0,x]
+    plotframe.iloc[x,2] = newdf2.iloc[0,x]
+    plotframe.iloc[x,3] = newdf3.iloc[0,x]
+    plotframe.iloc[x,4] = newdf4.iloc[0,x]
+    plotframe.iloc[x,5] = newdf5.iloc[0,x]
+    plotframe.iloc[x,6] = newdf6.iloc[0,x]
+    
+    
+figure = plt.figure(1)   
+ax = plt.axes()
+plt.plot(Qy2["Year"], Qy2.iloc[:,1]/365, color = 'red',label = 'Gransel' )
+plt.plot(Qy2["Year"], Qy2.iloc[:,2]/365, color = 'green', label = "Karats")
+plt.plot(Qy2["Year"] ,Qy2.iloc[:,3]/365, color = 'blue', label = "Sikfors")
+plt.plot(Qy2["Year"], Qy2.iloc[:,4]/365, color = 'black', label = "Storavan")
+plt.xlabel('Years(1984-2020)')
+plt.ylabel('mm/day')
+plt.title("Yearly Average Run-off")
+plt.legend()
+ax.set_xticks(y1)
+    
+figure = plt.figure(2)   
+plt.plot(plotframe["number"], plotframe[1], color='red', label = 'Gransel' )
+plt.plot(plotframe["number"], plotframe[2], color='green', label = "Karats")
+
+plt.plot(plotframe["number"], plotframe[4], color = 'blue', label = "SIKFORS")
+
+plt.plot(plotframe["number"], plotframe[6], color = 'black', label = "STORAVAN")
+plt.xlabel('Months of 1989')
+plt.ylabel('Rm/Ry')
+plt.legend()
+
+y2= [1,2,3,4,5,6,7,8,9,10,11,12]
+figure = plt.figure(3)
+plt.plot(y2, newdf1.iloc[25,1:], color = "red", label ='Gransel')
+plt.plot(y2, newdf2.iloc[25,1:], color = "green", label = 'Karats')
+plt.plot(y2, newdf4.iloc[25,1:], color = 'blue', label = 'Sikfors')
+plt.plot(y2, newdf6.iloc[25,1:], color = 'black', label = "storavan")
+plt.xlabel("Months of 2014")
+plt.ylabel('Rm/Ry')
+plt.legend()
+
+ 
